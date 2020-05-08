@@ -42,13 +42,13 @@ getStationKey([_|T], Key) -> getStationKey(T, Key).
 
 % function adds new station to the given monitor
 addStation(Name, _, _) when not is_list(Name) -> {error, "Name must be a list"};
-addStation(_, Coords, _) when not is_tuple(Coords) -> {error, "Coordinates must be a tuple"};
+addStation(_, Coords, _) when not is_tuple(Coords) -> {error, "Coordinate must be a tuple"};
 addStation(Name, Coords, Monitor) ->
   NameExists = getStationKey(maps:keys(Monitor), Name),
   CoordsExists = getStationKey(maps:keys(Monitor), Coords),
   case {NameExists, CoordsExists} of
     {null, null} -> Monitor#{#station{name=Name, coords=Coords} => maps:new()};
-    {null, _} -> {error, "Coordinates of such a value are already exist"};
+    {null, _} -> {error, "Coordinate of such a value is already exist"};
     {_, _} -> {error, "Name of such a value is already exist"}
   end.
 
@@ -61,7 +61,7 @@ addValue(_, _, _, _, Monitor) when Monitor == #{} -> {error, "Monitor is empty"}
 addValue(Key, Date, Type, Val, Monitor) ->
   Value = maps:find(getStationKey(maps:keys(Monitor), Key), Monitor),
   case Value of
-    error -> io:format("Station doesn't exist ~n");
+    error -> {error, "Station doesn't exist"};
     {ok, Measurement} ->
       Exists = maps:find(#measurement{type=Type, date=Date}, Measurement),
       case Exists of
@@ -70,7 +70,7 @@ addValue(Key, Date, Type, Val, Monitor) ->
             0 -> maps:put(getStationKey(maps:keys(Monitor), Key), maps:put(#measurement{type=Type, date=Date}, Val, Measurement), Monitor);
             _ -> maps:update(getStationKey(maps:keys(Monitor), Key), maps:put(#measurement{type=Type, date=Date}, Val, Measurement), Monitor)
           end;
-        _ -> {error, "Type and Date of such a value are already exist"}
+        _ -> {error, "Type and Date of such value are already exist"}
       end
   end.
 
@@ -86,7 +86,7 @@ removeValue(Key, Date, Type, Monitor) ->
     {ok, Measurement} ->
       ToRemove = maps:find(#measurement{type=Type, date=Date}, Measurement),
       case ToRemove of
-        error -> {error, "Measurments with such parameters don't exist"};
+        error -> {error, "Measurements with such parameters don't exist"};
         _ -> NewMeasurement = maps:remove(#measurement{type=Type, date=Date}, Measurement),
           maps:update(getStationKey(maps:keys(Monitor), Key), NewMeasurement, Monitor)
       end
@@ -104,7 +104,7 @@ getOneValue(Key, Date, Type, Monitor) ->
     {ok, Measurement} ->
       ToReturn = maps:find(#measurement{type=Type, date=Date}, Measurement),
       case ToReturn of
-        error -> {error, "Measurments with such parameters don't exist"};
+        error -> {error, "Measurements with such parameters don't exist"};
         {ok, Val} -> Val
       end
   end.
